@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="A Web App for logging guests in an event, implementing Firebase">
+        <meta name="author" content="Maru Gabriel Baul">
+        <title> Event Guest Logger </title>
+        <!--BootstrapCSS-->
+        <link href="./css/bootstrap.min.css" rel="stylesheet">
+        <link href="./css/bootstrap-theme.min.css" rel="stylesheet">
+        <!--CustomCSS-->
+        <link href="./css/style.css" rel="stylesheet">
+        
+        <!--FirebaseJS Client Library-->
+        <script src="https://cdn.firebase.com/js/client/2.4.2/firebase.js"></script>
+        
+    </head>
+    <body>
+        <div class="container">
+            <!--Collapsing Navbar-->
+            <nav class="navbar navbar-inverse navbar-fixed-top">
+                <div class="container">
+                    <div class="navbar-header">
+                        <a class="navbar-brand" href="index.html">Event Guest Logger</a>
+                    </div>
+                </div>
+            </nav>
+            <!--Main Content-->
+            <div class="main container-fluid">
+                <div id="guest-log">
+                    <h2 class="sub-header">Guest Log</h2>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Affiliation</th>
+                                    <th>Contact Number</th>
+                                    <th>Log Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="add_guest row container-fluid">
+                <input class="col-xs-12 form-control" type='text' id='name'  placeholder='Name'>
+                <input class="col-xs-12 form-control" type='text' id='affiliation'  placeholder='Affiliation'>
+                <input class="col-xs-12 form-control" type='text' id='contact-num'  placeholder='Contact Number'>
+                <button class="col-xs-offset-9 col-xs-3 btn btn-default" id='add-guest' onclick=addGuest()>Add Guest</button>
+            </div>
+        </div>
+        <!--JQuery required for BootstrapJS-->
+        <script src="./js/jquery-2.2.2.min.js"></script>
+        <!--BootstrapJS-->
+        <script src="./js/bootstrap.min.js"></script>
+        
+        <!--Toaster JQuery Plugin-->
+        <script src="./js/jquery.toaster.js"></script>
+        
+        <!--CustomJS For Firebase operations-->
+        <script>
+            // CREATE A REFERENCE TO FIREBASE
+            var rootRef = new Firebase("https://guest-logger.firebaseio.com/");
+            
+            //CREATE CHILD
+            var guestListRef = rootRef.child("guestList");
+        
+            //onclick function to add guest
+            var addGuest = function(){
+                //GET STRINGS FROM FIELDS
+                var inName = $('#name').val();
+                var inAff = $('#affiliation').val();
+                var inContactNumber = $('#contact-num').val();
+                if (inName == '') {
+                    $.toaster({ message : 'Please input your name.', title : 'Invalid', priority : 'warning' });
+                    return;
+                }
+                //PUSH TO GUESTLIST
+                guestListRef.push({
+                    name:inName,
+                    affiliation:inAff,
+                    contactNumber:inContactNumber,
+                    loginTimestamp:Date.now()
+                });
+                var inNameField = '';
+                var inAffField = '';
+                var inContactNumberField = '';
+            };
+            //
+            guestListRef.on('child_added', function (snapshot) {
+                //GET DATA
+                var data = snapshot.val();
+                var name = data.name;
+                var affiliation = data.affiliation || " ";
+                var contactNumber = data.contactNumber || ""; 
+                var loginTimestamp = data.loginTimestamp;
+                var date = new Date(loginTimestamp);
+                //CREATE ELEMENTS
+                var guestElement = $('<tr>');
+                var nameElement = $('<td></td>');
+                var affElement = $('<td></td>');
+                var cNumElement = $('<td></td>');
+                var loginTimeElement = $('<td></td>');
+                //ADD TEXT TO ELEMENTS
+                nameElement.text(name);
+                affElement.text(affiliation);
+                cNumElement.text(contactNumber);
+                loginTimeElement.text(date.getDate()+"/"+date.getMonth()+"/"+date.getYear()+" "+date.getHours()+":"+date.getMinutes());
+                //ADD DATA TO GUEST
+                guestElement.prepend(loginTimeElement).prepend(cNumElement).prepend(affElement).prepend(nameElement);
+                //ADD GUEST TO GUEST LIST
+                $('#tableBody').append(guestElement);
+                
+            });
+            
+        </script>
+    </body>
+</html>
